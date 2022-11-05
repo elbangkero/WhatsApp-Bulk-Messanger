@@ -1,24 +1,47 @@
-2022/11/05-18:09:07.694 6d20 Reusing MANIFEST C:\WebServer\nginx\html\whatsappsender\Session\session-client-two\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2022/11/05-18:09:07.694 6d20 Recovering log #482
-2022/11/05-18:09:07.859 6d20 Reusing old log C:\WebServer\nginx\html\whatsappsender\Session\session-client-two\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000482.log 
-2022/11/05-18:09:23.005 1c0 Level-0 table #493: started
-2022/11/05-18:09:23.053 1c0 Level-0 table #493: 1203520 bytes OK
-2022/11/05-18:09:23.056 1c0 Delete type=0 #482
-2022/11/05-18:09:31.678 25a4 Compacting 1@1 + 7@2 files
-2022/11/05-18:09:31.839 25a4 Generated table #494@1: 29553 keys, 2244291 bytes
-2022/11/05-18:09:31.928 25a4 Generated table #495@1: 23925 keys, 2254854 bytes
-2022/11/05-18:09:32.023 25a4 Generated table #496@1: 23738 keys, 2257670 bytes
-2022/11/05-18:09:32.107 25a4 Generated table #497@1: 23911 keys, 2256490 bytes
-2022/11/05-18:09:32.198 25a4 Generated table #498@1: 90718 keys, 2259251 bytes
-2022/11/05-18:09:32.236 25a4 Generated table #499@1: 19128 keys, 2180711 bytes
-2022/11/05-18:09:32.270 25a4 Generated table #500@1: 14511 keys, 767328 bytes
-2022/11/05-18:09:32.270 25a4 Compacted 1@1 + 7@2 files => 14220595 bytes
-2022/11/05-18:09:32.271 25a4 compacted to: files[ 0 0 16 0 0 0 0 ]
-2022/11/05-18:09:32.271 25a4 Delete type=2 #484
-2022/11/05-18:09:32.271 25a4 Delete type=2 #485
-2022/11/05-18:09:32.271 25a4 Delete type=2 #486
-2022/11/05-18:09:32.271 25a4 Delete type=2 #487
-2022/11/05-18:09:32.271 25a4 Delete type=2 #488
-2022/11/05-18:09:32.271 25a4 Delete type=2 #489
-2022/11/05-18:09:32.271 25a4 Delete type=2 #490
-2022/11/05-18:09:32.271 25a4 Delete type=2 #493
+2022/11/05-21:01:30.795 56a0 Reusing MANIFEST C:\WebServer\nginx\html\whatsappsender\Session\session-client-two\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2022/11/05-21:01:30.795 56a0 Recovering log #838
+2022/11/05-21:01:30.797 56a0 Reusing old log C:\WebServer\nginx\html\whatsappsender\Session\session-client-two\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000838.log 
+2022/11/05-21:01:31.918 81a0 Compacting 1@0 + 0@1 files
+2022/11/05-21:01:31.955 81a0 Generated table #841@0: 18136 keys, 437948 bytes
+2022/11/05-21:01:31.968 81a0 Generated table #842@0: 10396 keys, 130208 bytes
+2022/11/05-21:01:31.968 81a0 Compacted 1@0 + 0@1 files => 568156 bytes
+2022/11/05-21:01:31.970 81a0 compacted to: files[ 0 2 15 0 0 0 0 ]
+2022/11/05-21:01:41.657 81a0 Compacting 1@1 + 10@2 files
+2022/11/05-21:01:41.809 81a0 Generated table #843@1: 29536 keys, 2244452 bytes
+2022/11/05-21:01:41.879 81a0 Generated table #844@1: 23852 keys, 2258565 bytes
+2022/11/05-21:01:41.977 81a0 Generated table #845@1: 23871 keys, 2254512 bytes
+2022/11/05-21:01:42.041 81a0 Generated table #846@1: 23793 keys, 2257667 bytes
+2022/11/05-21:01:42.090 81a0 Generated table #847@1: 23953 keys, 2257028 bytes
+2022/11/05-21:01:42.168 81a0 Generated table #848@1: 75371 keys, 2257034 bytes
+2022/11/05-21:01:42.229 81a0 Generated table #849@1: 62129 keys, 2229919 bytes
+2022/11/05-21:01:42.275 81a0 Generated table #850@1: 24312 keys, 2193240 bytes
+2022/11/05-21:01:42.297 81a0 Generated table #851@1: 297 keys, 2115479 bytes
+2022/11/05-21:01:42.391 81a0 Generated table #852@1: 69723 keys, 2204809 bytes
+2022/11/05-21:01:42.405 81a0 Generated table #853@1: 9903 keys, 185354 bytes
+2022/11/05-21:01:42.405 81a0 Compacted 1@1 + 10@2 files => 22458059 bytes
+2022/11/05-21:01:42.406 81a0 compacted to: files[ 0 1 16 0 0 0 0 ]
+2022/11/05-21:01:42.407 81a0 Delete type=2 #822
+2022/11/05-21:01:42.407 81a0 Delete type=2 #823
+2022/11/05-21:01:42.407 81a0 Delete type=2 #824
+2022/11/05-21:01:42.407 81a0 Delete type=2 #825
+2022/11/05-21:01:42.407 81a0 Delete type=2 #826
+2022/11/05-21:01:42.407 81a0 Delete type=2 #827
+2022/11/05-21:01:42.407 81a0 Delete type=2 #828
+2022/11/05-21:01:42.407 81a0 Delete type=2 #829
+2022/11/05-21:01:42.407 81a0 Delete type=2 #830
+2022/11/05-21:01:42.407 81a0 Delete type=2 #831
+2022/11/05-21:01:42.407 81a0 Delete type=2 #839
+2022/11/05-21:01:42.407 81a0 Delete type=2 #841
+2022/11/05-21:01:49.576 6e8c Compacting 1@1 + 5@2 files
+2022/11/05-21:01:49.721 6e8c Generated table #854@1: 121093 keys, 2277722 bytes
+2022/11/05-21:01:49.832 6e8c Generated table #855@1: 120612 keys, 2276929 bytes
+2022/11/05-21:01:49.960 6e8c Generated table #856@1: 120909 keys, 2277079 bytes
+2022/11/05-21:01:50.000 6e8c Generated table #857@1: 45342 keys, 857539 bytes
+2022/11/05-21:01:50.000 6e8c Compacted 1@1 + 5@2 files => 7689269 bytes
+2022/11/05-21:01:50.001 6e8c compacted to: files[ 0 0 15 0 0 0 0 ]
+2022/11/05-21:01:50.001 6e8c Delete type=2 #832
+2022/11/05-21:01:50.001 6e8c Delete type=2 #834
+2022/11/05-21:01:50.001 6e8c Delete type=2 #835
+2022/11/05-21:01:50.001 6e8c Delete type=2 #836
+2022/11/05-21:01:50.001 6e8c Delete type=2 #837
+2022/11/05-21:01:50.001 6e8c Delete type=2 #842

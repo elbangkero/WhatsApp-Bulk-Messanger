@@ -11,7 +11,7 @@ const contacts = [];
 
 const db = require('./api/queries')
 
-
+/*
 fs.createReadStream('contacts.csv')
     .pipe(csv())
     .on('data', function (data) {
@@ -25,13 +25,40 @@ fs.createReadStream('contacts.csv')
     .on('end', () => {
         // console.log(contacts);
     });
+    */
 
 let counter = { fails: 0, success: 0 }
 
+fs.createReadStream('./data_leads/birthday_campaign.csv')
+    .pipe(csv())
+    .on('data', function (data) {
+        try {
+            contacts.push(data.number);
+            console.log(data.number);
+        } catch (err) {
+            console.error(err);
+            console.log('error contact number');
+        }
+    })
+    .on('end', () => {
+        // console.log(contacts);
+    });
+
+const sum = db.UpdateWhatsappConfig();
+console.log(sum);
 
 
- 
-db.getWhatsappConfig(); 
+function onChangeFromDatabase() {
+    console.log('resending...');
+    deploy_all(query);
+    counter.success = 0;
+    counter.fails = 0;
+    console.log('onchange from db : ', query);
+}
+
+
+
+
 
 const client = new Client({
     authStrategy: new LocalAuth({
@@ -49,7 +76,7 @@ client.on('qr', (qr) => {
 
 
 client.on('authenticated', (session) => {
-    //console.log("Authentication : Succesfully")
+    console.log("Authentication : Succesfully")
 });
 
 
@@ -62,7 +89,7 @@ client.on('message', async msg => {
         // Send a new message as a reply to the current one
         msg.reply('pong');
 
-    }  else if (msg.body === '!ping') {
+    } else if (msg.body === '!ping') {
         // Send a new message to the same chat
         client.sendMessage(msg.from, 'pong');
 
@@ -233,20 +260,23 @@ client.on('auth_failure', msg => {
     console.error('AUTHENTICATION FAILURE', msg);
 });
 
-/*
+
 client.on('ready', () => {
     for (var i = 0; i < 1; i++) {
         console.log('Sending..');
         deploy_all();
     }
-});*/
+});
 
 
 client.on('disconnected', (reason) => {
     console.log('Client was logged out', reason);
 });
 
-async function deploy_all() {
+async function deploy_all(id) {
+    console.log('deploy_all:', id);
+    //db.UpdateWhatsappConfig();
+
     for (const contact of contacts) {
         const final_number = (contact.length > 10) ? `${contact}@c.us` : `91${contact}@c.us`;
         const isRegistered = await client.isRegisteredUser(final_number);
@@ -286,4 +316,7 @@ async function deleteChat(phoneNumber) {
             // can handle other error messages...     
         })
     })
+}
+module.exports = {
+    onChangeFromDatabase,
 }

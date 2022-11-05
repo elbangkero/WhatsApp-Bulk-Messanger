@@ -3,8 +3,7 @@ const express = require("express")
 const path = require('path')
 const app = express(); 
 const dotenv = require('dotenv');
-dotenv.config(); 
-const db = require('./api/queries')
+dotenv.config();  
 
 const client = require('./client');
 
@@ -27,8 +26,7 @@ app.listen(`${process.env.PORT}`, () => {
 app.get('/', (request, response) => {
   response.json({ info: 'Node.js, Express, and Postgres API' })
 })  
-
-app.get('/users', db.getUsers);
+ 
 
 
 //console.log(userToken) // Promise { <pending> }
