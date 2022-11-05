@@ -1,12 +1,24 @@
-2022/11/02-23:20:55.575 25fc Reusing MANIFEST C:\WebServer\nginx\html\whatsappsender\Session\session-client-two\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2022/11/02-23:20:55.575 25fc Recovering log #61
-2022/11/02-23:20:55.801 25fc Reusing old log C:\WebServer\nginx\html\whatsappsender\Session\session-client-two\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000061.log 
-2022/11/02-23:21:10.313 30ac Level-0 table #67: started
-2022/11/02-23:21:10.365 30ac Level-0 table #67: 1184475 bytes OK
-2022/11/02-23:21:10.366 30ac Delete type=0 #61
-2022/11/02-23:21:13.727 5734 Compacting 1@1 + 2@2 files
-2022/11/02-23:21:13.865 5734 Generated table #68@1: 20634 keys, 2200370 bytes
-2022/11/02-23:21:14.105 5734 Generated table #69@1: 85177 keys, 2255956 bytes
-2022/11/02-23:21:14.157 5734 Generated table #70@1: 18116 keys, 308502 bytes
-2022/11/02-23:21:14.157 5734 Compacted 1@1 + 2@2 files => 4764828 bytes
-2022/11/02-23:21:14.157 5734 compacted to: files[ 0 0 3 0 0 0 0 ]
+2022/11/05-18:09:07.694 6d20 Reusing MANIFEST C:\WebServer\nginx\html\whatsappsender\Session\session-client-two\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2022/11/05-18:09:07.694 6d20 Recovering log #482
+2022/11/05-18:09:07.859 6d20 Reusing old log C:\WebServer\nginx\html\whatsappsender\Session\session-client-two\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000482.log 
+2022/11/05-18:09:23.005 1c0 Level-0 table #493: started
+2022/11/05-18:09:23.053 1c0 Level-0 table #493: 1203520 bytes OK
+2022/11/05-18:09:23.056 1c0 Delete type=0 #482
+2022/11/05-18:09:31.678 25a4 Compacting 1@1 + 7@2 files
+2022/11/05-18:09:31.839 25a4 Generated table #494@1: 29553 keys, 2244291 bytes
+2022/11/05-18:09:31.928 25a4 Generated table #495@1: 23925 keys, 2254854 bytes
+2022/11/05-18:09:32.023 25a4 Generated table #496@1: 23738 keys, 2257670 bytes
+2022/11/05-18:09:32.107 25a4 Generated table #497@1: 23911 keys, 2256490 bytes
+2022/11/05-18:09:32.198 25a4 Generated table #498@1: 90718 keys, 2259251 bytes
+2022/11/05-18:09:32.236 25a4 Generated table #499@1: 19128 keys, 2180711 bytes
+2022/11/05-18:09:32.270 25a4 Generated table #500@1: 14511 keys, 767328 bytes
+2022/11/05-18:09:32.270 25a4 Compacted 1@1 + 7@2 files => 14220595 bytes
+2022/11/05-18:09:32.271 25a4 compacted to: files[ 0 0 16 0 0 0 0 ]
+2022/11/05-18:09:32.271 25a4 Delete type=2 #484
+2022/11/05-18:09:32.271 25a4 Delete type=2 #485
+2022/11/05-18:09:32.271 25a4 Delete type=2 #486
+2022/11/05-18:09:32.271 25a4 Delete type=2 #487
+2022/11/05-18:09:32.271 25a4 Delete type=2 #488
+2022/11/05-18:09:32.271 25a4 Delete type=2 #489
+2022/11/05-18:09:32.271 25a4 Delete type=2 #490
+2022/11/05-18:09:32.271 25a4 Delete type=2 #493

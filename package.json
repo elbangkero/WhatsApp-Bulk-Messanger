@@ -1,15 +1,19 @@
 {
   "name": "Whatsapp",
   "version": "1.0.0",
-  "description": "Whatsapp by Yash Thaker",
+  "description": "Whatsapp Bulk Messenger by Eldev",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Yash Thaker",
+  "author": "Eldev",
   "license": "MIT",
   "dependencies": {
+    "bootstrap": "^5.2.2",
     "csv-parser": "^3.0.0",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "jquery": "^3.6.1",
     "pg": "^8.8.0",
     "qrcode-terminal": "^0.12.0",
     "whatsapp-web.js": "1.18.2"
