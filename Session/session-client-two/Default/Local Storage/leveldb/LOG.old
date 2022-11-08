@@ -1,3 +1,3 @@
-2022/11/08-18:17:24.388 48c Reusing MANIFEST C:\WebServer\nginx\html\whatsappsender\Session\session-client-two\Default\Local Storage\leveldb/MANIFEST-000001
-2022/11/08-18:17:24.402 48c Recovering log #30
-2022/11/08-18:17:24.402 48c Reusing old log C:\WebServer\nginx\html\whatsappsender\Session\session-client-two\Default\Local Storage\leveldb/000030.log 
+2022/11/08-18:29:33.006 1448 Reusing MANIFEST C:\WebServer\nginx\html\whatsappsender\Session\session-client-two\Default\Local Storage\leveldb/MANIFEST-000001
+2022/11/08-18:29:33.008 1448 Recovering log #30
+2022/11/08-18:29:33.010 1448 Reusing old log C:\WebServer\nginx\html\whatsappsender\Session\session-client-two\Default\Local Storage\leveldb/000030.log 

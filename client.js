@@ -35,7 +35,6 @@ let counter = { fails: 0, success: 0 }
 
 /* DB QUERIES */
 
-var testing = [];
 
 
 //Listener from Postgre
@@ -44,55 +43,55 @@ pgsql_connection.on("notification", function (data) {
     //console.log("data", JSON.parse(data.payload));
     console.log('notif from database!');
     console.log('resending...');
-    testing.push(data.length);
-    console.log(testing);
-    console.log('index dynamic : ', testing.length);
 
     resend_query(parseInt(data.payload));
+
     function resend_query(dataload) {
-        pgsql_connection.query(`SELECT * FROM whatsapp_config where triggerstatus='active' and sending ='true'`).then(res => {
-            const data = res.rows;
-            console.log('Whatsapp queue count : ', res.rowCount);
+        setTimeout(() => {
+            pgsql_connection.query(`SELECT * FROM whatsapp_config where triggerstatus='active' and sending ='true'`).then(res => {
+                const data = res.rows;
+                console.log('Whatsapp queue count : ', res.rowCount);
 
-            console.log('payload : ', dataload);
-            const callback = dataload == res.rowCount;
-            if (callback) {
+                console.log('payload : ', dataload);
+                const callback = dataload == res.rowCount;
+                if (callback) {
 
-                data.forEach(row => {
+                    data.forEach(row => {
 
-                    var contacts = [];
-                    var dynamic_contact = row.config_id;
+                        var contacts = [];
+                        var dynamic_contact = row.config_id;
 
-                    contacts[dynamic_contact];
+                        contacts[dynamic_contact];
 
-                    console.log(`config id: ${row.config_id};  status: ${row.triggerstatus};  data_leads: ${row.data_leads}`);
-                    var message = 'MESSAGE TEST'
-                    fs.createReadStream(row.data_leads)
-                        .pipe(csv())
-                        .on('data', function (data) {
-                            try {
-                                contacts.push(data.number);
-                                //console.log(data.number); 
-                            } catch (err) {
-                                console.error(err);
-                                console.log('error contact number');
-                            }
-                        })
-                        .on('end', () => {
-                            sender(message, contacts, row.campaign_name, row.config_id);
-                            console.log(contacts);
+                        console.log(`config id: ${row.config_id};  status: ${row.triggerstatus};  data_leads: ${row.data_leads}`);
+                        var message = 'MESSAGE TEST'
+                        fs.createReadStream(row.data_leads)
+                            .pipe(csv())
+                            .on('data', function (data) {
+                                try {
+                                    contacts.push(data.number);
+                                    //console.log(data.number); 
+                                } catch (err) {
+                                    console.error(err);
+                                    console.log('error contact number');
+                                }
+                            })
+                            .on('end', () => {
+                                sender(message, contacts, row.campaign_name, row.config_id);
+                                console.log(contacts);
 
-                        });
-
-
-                })
-            }
-            if (isEmptyObject(data)) {
-                console.log('No config at the moment');
-            }
+                            });
 
 
-        })
+                    })
+                }
+                if (isEmptyObject(data)) {
+                    console.log('No config at the moment');
+                }
+
+
+            })
+        }, "10000")
     }
 
 
