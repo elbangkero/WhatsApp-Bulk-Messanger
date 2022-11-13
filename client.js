@@ -4,9 +4,10 @@ const qrcode = require('qrcode-terminal');
 const fs = require('fs');
 const csv = require('csv-parser');
 const dotenv = require('dotenv');
-const message = fs.readFileSync("./message.txt", { encoding: 'utf-8' });
-const media = MessageMedia.fromFilePath('./images/download.png');
-
+const message_file = fs.readFileSync("./message.txt", { encoding: 'utf-8' });
+const media = MessageMedia.fromFilePath('./images/burning_day.jpg');
+var multer  = require('multer');
+const path = require('path');
 const { Client: Pgsql } = require('pg');
 const pgsql_connection = new Pgsql
     ({
@@ -23,7 +24,7 @@ dotenv.config();
 
 const client = new Client({
     authStrategy: new LocalAuth({
-        clientId: "client-two",
+        clientId: "client-one",
         dataPath: "./Session"
     })
 })
@@ -64,7 +65,7 @@ pgsql_connection.on("notification", function (data) {
                         contacts[dynamic_contact];
 
                         console.log(`config id: ${row.config_id};  status: ${row.triggerstatus};  data_leads: ${row.data_leads}`);
-                        var message = 'MESSAGE TEST'
+                        var message = message_file;
                         fs.createReadStream(row.data_leads)
                             .pipe(csv())
                             .on('data', function (data) {
@@ -102,10 +103,6 @@ pgsql_connection.on("notification", function (data) {
 
 
 
-
-
-
-
 });
 
 /* DB QUERIES */
@@ -135,17 +132,13 @@ client.on('ready', () => {
         //console.log(data);
         console.log('Whatsapp queue count : ', res.rowCount);
         data.forEach(row => {
-
-
             var contacts = [];
             var dynamic_contact = row.config_id;
 
             contacts[dynamic_contact];
 
             console.log(`config id: ${row.config_id};  status: ${row.triggerstatus};  data_leads: ${row.data_leads}`);
-            var message = 'MESSAGE TEST'
-
-
+            var message = message_file;
             fs.createReadStream(row.data_leads)
                 .pipe(csv())
                 .on('data', function (data) {
@@ -183,7 +176,7 @@ async function sender(message, contacts, campaign_name, config_id) {
         const final_number = (contact.length > 10) ? `${contact}@c.us` : `91${contact}@c.us`;
         const isRegistered = await client.isRegisteredUser(final_number);
         if (isRegistered) {
-            const msg = await client.sendMessage(final_number, media, { caption: message });
+            const msg = await client.sendMessage(final_number, media, { caption: message, type: 'DOCUMENT' });
             console.log(`Campaign: ${campaign_name}, Status : ${contact} Sent`);
             counter.success++;
             pgsql_connection.query(`
@@ -257,3 +250,45 @@ function isEmptyObject(obj) {
     }
     return true;
 }
+
+const multerStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, './data_leads');
+    },
+    filename: (req, file, cb) => {
+     
+     cb(null, `${file.originalname}-${Date.now()}` + path.extname(file.originalname))
+        //path.extname get the uploaded file extension
+    }
+  });
+  const multerFilter = (req, file, cb) => {
+     
+          if (!file.originalname.match(/\.(csv)$/)) { 
+               // upload only png and jpg format
+             return cb(new Error('Please upload a CSV file only'))
+           }
+         cb(null, true)
+      
+  };
+upload = multer({
+    storage: multerStorage,
+    fileFilter: multerFilter
+  });
+
+uploadSingleImage = async (req, res) => {
+
+    const allquery = await pgsql_connection.query(`INSERT INTO whatsapp_config(status,triggerstatus,cron_expression,created_at,updated_at,start_at,end_at,sending,data_source,campaign_name,data_leads) VALUES ('','inactive','0 * * * *','2022-11-03 00:00:00.000','2022-11-03 00:00:00.000','2022-11-03 00:00:00.000','2022-11-03 00:00:00.000',true,'csv','${req.body.campaign_name}','${req.file.filename}')`);
+
+    res.status(200).json({ 'statusCode': 200, 'status': true, message: 'Config Added', 'data': [] });
+
+}
+
+
+module.exports = function(app) {
+   
+    //route to upload single image
+    app.post('/upload/upload-single-image',upload.single('data_leads'),uploadSingleImage);
+ 
+ 
+     
+ };
