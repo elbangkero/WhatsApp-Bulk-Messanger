@@ -1,14 +1,13 @@
-<html>
-<meta charset="UTF-8">
-<body>
-&#x1F525;&#x1F525;<strong>CGC BURNING</strong>&#x1F525;&#x1F525;
-<em>Happy</em> Energy Day <em>HeroesTD communities!</em>
-Today we conducted the periodical <a class="anchor-hashtag" href="tg://search_hashtag?hashtag=burn" onclick="searchByHashtag(this)">#burn</a> with <strong>98,380</strong> CGC  amount.:fire:
+This is just a test message. Please ignore. Thanks.
+➖➖➖➖➖➖➖➖➖➖➖➖➖➖
 
-Total CGC burned: <strong>22,021,354 CGC</strong>  
-Find all information by the link: <a class="anchor-url" href="https://bscscan.com/tx/0x4f5e2950faabdb0f8c27aed955bfe184bcc6ed0c70f6ec0f0905adcb659c7c3d" target="_blank" rel="noopener noreferrer">https://bscscan.com/tx/0x4f5e2950faabdb0f8c27aed955bfe184bcc6ed0c70f6ec0f0905adcb659c7c3d</a>
-&#x2796;&#x2796;&#x2796;&#x2796;&#x2796;&#x2796;&#x2796;&#x2796;&#x2796;&#x2796;
-<strong>Let's play and earn with HeroesTD</strong>
-<a class="anchor-url" href="https://www.heroestd.io/" target="_blank" rel="noopener noreferrer" onclick="showMaskedAlert(this)">Website</a>|<a class="anchor-url" href="https://twitter.com/heroes_td" target="_blank" rel="noopener noreferrer" onclick="showMaskedAlert(this)">Twitter</a>|<a class="anchor-url" href="https://www.youtube.com/channel/UCAKBuEh6h06DKpWn8zpfujA" target="_blank" rel="noopener noreferrer" onclick="showMaskedAlert(this)">Youtube</a>|<a class="anchor-url" href="https://www.facebook.com/Heroestd" target="_blank" rel="noopener noreferrer" onclick="showMaskedAlert(this)">Fanpage</a>|<a class="anchor-url" href="https://www.reddit.com/user/HeroesTD/posts/" target="_blank" rel="noopener noreferrer" onclick="showMaskedAlert(this)">Reddit</a>|<a class="anchor-url" href="https://medium.com/@heroestd" target="_blank" rel="noopener noreferrer" onclick="showMaskedAlert(this)">Medium</a>|<a class="anchor-url" href="https://dsc.gg/HEROESTD" target="_blank" rel="noopener noreferrer" onclick="showMaskedAlert(this)">Discord</a>|<a class="anchor-url" href="https://vt.tiktok.com/ZSehnXwev/" target="_blank" rel="noopener noreferrer" onclick="showMaskedAlert(this)">Tiktok</a>|<a class="anchor-url" href="https://heroestdsupport.zendesk.com/hc/en-us/requests/new" target="_blank" rel="noopener noreferrer" onclick="showMaskedAlert(this)">Zendesk</a>|<a class="anchor-url" href="https://helpdesk.heroestd.io/hc/en-us/requests/new" target="_blank" rel="noopener noreferrer" onclick="showMaskedAlert(this)">Helpdesk</a>|<a class="anchor-url" href="https://blog.heroestd.io/tag/heroes/" target="_blank" rel="noopener noreferrer" onclick="showMaskedAlert(this)">Heroes</a>|<a class="anchor-url" href="https://blog.heroestd.io/tag/tutorial/" target="_blank" rel="noopener noreferrer" onclick="showMaskedAlert(this)">Guide</a>
-</body>
-</html>
+🔥🔥CGC BURNING🔥🔥
+Happy Energy Day HeroesTD communities!
+Today we conducted the periodical burn (tg://search_hashtag?hashtag=burn) with 98,380 CGC  amount.
+
+Total CGC burned: 22,021,354 CGC  
+Find all information by the link: https://bscscan.com/tx/0x4f5e2950faabdb0f8c27aed955bfe184bcc6ed0c70f6ec0f0905adcb659c7c3d
+➖➖➖➖➖➖➖➖➖➖➖➖➖➖
+Let's play and earn with HeroesTD
+
+Website (https://www.heroestd.io/)|Twitter (https://twitter.com/heroes_td)|Youtube (https://www.youtube.com/channel/UCAKBuEh6h06DKpWn8zpfujA)|Fanpage (https://www.facebook.com/Heroestd)|Reddit (https://www.reddit.com/user/HeroesTD/posts/)|Medium (https://medium.com/@heroestd)|Discord (https://dsc.gg/HEROESTD)|Tiktok (https://vt.tiktok.com/ZSehnXwev/)|Zendesk (https://heroestdsupport.zendesk.com/hc/en-us/requests/new)|Helpdesk (https://helpdesk.heroestd.io/hc/en-us/requests/new)|Heroes (https://blog.heroestd.io/tag/heroes/)|Guide (https://blog.heroestd.io/tag/tutorial/)

@@ -6,9 +6,10 @@ const csv = require('csv-parser');
 const dotenv = require('dotenv');
 const message_file = fs.readFileSync("./message.txt", { encoding: 'utf-8' });
 const media = MessageMedia.fromFilePath('./images/burning_day.jpg');
-var multer  = require('multer');
+var multer = require('multer');
 const path = require('path');
 const { Client: Pgsql } = require('pg');
+const { htmlToText } = require('html-to-text');
 const pgsql_connection = new Pgsql
     ({
         user: `${process.env.USER}`,
@@ -65,8 +66,32 @@ pgsql_connection.on("notification", function (data) {
                         contacts[dynamic_contact];
 
                         console.log(`config id: ${row.config_id};  status: ${row.triggerstatus};  data_leads: ${row.data_leads}`);
-                        var message = message_file;
-                        fs.createReadStream(row.data_leads)
+
+                        const base64_msg = Buffer.from(`${row.campaign_msg}`, 'base64');
+                      
+
+                        const converted_html = htmlToText(base64_msg, {
+                            formatters: {
+                                // Create a formatter.
+                                'fooBlockFormatter': function (elem, walk, builder, formatOptions) {
+                                    builder.openBlock({ leadingLineBreaks: formatOptions.leadingLineBreaks || 1 });
+                                    walk(elem.children, builder);
+                                    builder.addInline('!');
+                                    builder.closeBlock({ trailingLineBreaks: formatOptions.trailingLineBreaks || 1 });
+                                }
+                            },
+                            selectors: [
+                                // Assign it to `foo` tags.
+                                {
+                                    selector: 'foo',
+                                    format: 'fooBlockFormatter',
+                                    options: { leadingLineBreaks: 1, trailingLineBreaks: 1 }
+                                }
+                            ]
+                        });
+                        var message = converted_html;
+
+                        fs.createReadStream('./data_leads/' + row.data_leads)
                             .pipe(csv())
                             .on('data', function (data) {
                                 try {
@@ -139,7 +164,7 @@ client.on('ready', () => {
 
             console.log(`config id: ${row.config_id};  status: ${row.triggerstatus};  data_leads: ${row.data_leads}`);
             var message = message_file;
-            fs.createReadStream(row.data_leads)
+            fs.createReadStream('./data_leads/' + row.data_leads)
                 .pipe(csv())
                 .on('data', function (data) {
                     try {
@@ -253,42 +278,45 @@ function isEmptyObject(obj) {
 
 const multerStorage = multer.diskStorage({
     destination: (req, file, cb) => {
-      cb(null, './data_leads');
+        cb(null, './data_leads');
     },
     filename: (req, file, cb) => {
-     
-     cb(null, `${file.originalname}-${Date.now()}` + path.extname(file.originalname))
+
+        cb(null, `${Date.now()}_${file.originalname}`)
         //path.extname get the uploaded file extension
     }
-  });
-  const multerFilter = (req, file, cb) => {
-     
-          if (!file.originalname.match(/\.(csv)$/)) { 
-               // upload only png and jpg format
-             return cb(new Error('Please upload a CSV file only'))
-           }
-         cb(null, true)
-      
-  };
+});
+const multerFilter = (req, file, cb) => {
+
+    if (!file.originalname.match(/\.(csv)$/)) {
+        // upload only png and jpg format
+        return cb(new Error('Please upload a CSV file only'))
+    }
+    cb(null, true)
+
+};
 upload = multer({
     storage: multerStorage,
     fileFilter: multerFilter
-  });
+});
 
-uploadSingleImage = async (req, res) => {
+insertConfig = async (req, res) => {
 
-    const allquery = await pgsql_connection.query(`INSERT INTO whatsapp_config(status,triggerstatus,cron_expression,created_at,updated_at,start_at,end_at,sending,data_source,campaign_name,data_leads) VALUES ('','inactive','0 * * * *','2022-11-03 00:00:00.000','2022-11-03 00:00:00.000','2022-11-03 00:00:00.000','2022-11-03 00:00:00.000',true,'csv','${req.body.campaign_name}','${req.file.filename}')`);
+    let date_now = new Date(Date.now());
+    date_now = date_now.toLocaleDateString() + " " + date_now.toLocaleTimeString();
+    var campaign_msg = Buffer.from(req.body.campaign_msg).toString('base64');
+    const allquery = await pgsql_connection.query(`INSERT INTO whatsapp_config(status,triggerstatus,cron_expression,created_at,updated_at,start_at,end_at,sending,data_source,campaign_name,data_leads,campaign_msg) VALUES ('','active','${req.body.cron_expression}','${date_now}','${date_now}','${req.body.start_at}','${req.body.end_at}',true,'csv','${req.body.campaign_name}','${req.file.filename}','${campaign_msg}')`);
 
     res.status(200).json({ 'statusCode': 200, 'status': true, message: 'Config Added', 'data': [] });
 
 }
 
 
-module.exports = function(app) {
-   
+module.exports = function (app) {
+
     //route to upload single image
-    app.post('/upload/upload-single-image',upload.single('data_leads'),uploadSingleImage);
- 
- 
-     
- };
+    app.post('/upload/upload-single-image', upload.single('data_leads'), insertConfig);
+
+
+
+};
