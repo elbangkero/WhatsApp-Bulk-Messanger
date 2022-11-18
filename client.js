@@ -10,6 +10,7 @@ var multer = require('multer');
 const path = require('path');
 const { Client: Pgsql } = require('pg');
 const { htmlToText } = require('html-to-text');
+const e = require('express');
 const pgsql_connection = new Pgsql
     ({
         user: `${process.env.USER}`,
@@ -60,6 +61,8 @@ pgsql_connection.on("notification", function (data) {
 
                     data.forEach(row => {
 
+
+
                         var contacts = [];
                         var dynamic_contact = row.config_id;
 
@@ -68,7 +71,7 @@ pgsql_connection.on("notification", function (data) {
                         console.log(`config id: ${row.config_id};  status: ${row.triggerstatus};  data_leads: ${row.data_leads}`);
 
                         const base64_msg = Buffer.from(`${row.campaign_msg}`, 'base64');
-                      
+
 
                         const converted_html = htmlToText(base64_msg, {
                             formatters: {
@@ -91,22 +94,43 @@ pgsql_connection.on("notification", function (data) {
                         });
                         var message = converted_html;
 
-                        fs.createReadStream('./data_leads/' + row.data_leads)
-                            .pipe(csv())
-                            .on('data', function (data) {
-                                try {
-                                    contacts.push(data.number);
-                                    //console.log(data.number); 
-                                } catch (err) {
-                                    console.error(err);
-                                    console.log('error contact number');
-                                }
-                            })
-                            .on('end', () => {
-                                sender(message, contacts, row.campaign_name, row.config_id);
-                                console.log(contacts);
+                        const campaign_img = row.campaign_img == 'undefined' ? null : MessageMedia.fromFilePath('./uploads/campaign_images/' + row.campaign_img);
 
+                        if (row.data_source == 'csv') {
+                            fs.createReadStream('./uploads/data_leads/' + row.data_leads)
+                                .pipe(csv())
+                                .on('data', function (data) {
+                                    try {
+                                        contacts.push(data.number);
+                                        //console.log(data.number); 
+                                    } catch (err) {
+                                        console.error(err);
+                                        console.log('error contact number');
+                                    }
+                                })
+                                .on('end', () => {
+                                    sender(message, contacts, row.campaign_name, row.config_id, campaign_img);
+                                    console.log(contacts);
+                                    pgsql_connection.query(
+                                        "update whatsapp_config set  status = 'sending' where config_id=$1",
+                                        [row.config_id]);
+                                });
+                        }
+                        else if (row.data_source == 'query') {
+                            const data_leads = Buffer.from(`${row.data_leads}`, 'base64');
+                            pgsql_connection.query(`${data_leads}`).then(res_query => {
+                                const data = res_query.rows;
+                                data.forEach(row_query => {
+                                    //console.log(row_query.cp_number);
+                                    contacts.push(row_query.cp_number);
+                                });
+
+                                sender(message, contacts, row.campaign_name, row.config_id, campaign_img);
+                                pgsql_connection.query(
+                                    "update whatsapp_config set  status = 'sending' where config_id=$1",
+                                    [row.config_id]);
                             });
+                        }
 
 
                     })
@@ -163,23 +187,67 @@ client.on('ready', () => {
             contacts[dynamic_contact];
 
             console.log(`config id: ${row.config_id};  status: ${row.triggerstatus};  data_leads: ${row.data_leads}`);
-            var message = message_file;
-            fs.createReadStream('./data_leads/' + row.data_leads)
-                .pipe(csv())
-                .on('data', function (data) {
-                    try {
-                        contacts.push(data.number);
-                        //console.log(data.number); 
-                    } catch (err) {
-                        console.error(err);
-                        console.log('error contact number');
+            const base64_msg = Buffer.from(`${row.campaign_msg}`, 'base64');
+            const converted_html = htmlToText(base64_msg, {
+                formatters: {
+                    // Create a formatter.
+                    'fooBlockFormatter': function (elem, walk, builder, formatOptions) {
+                        builder.openBlock({ leadingLineBreaks: formatOptions.leadingLineBreaks || 1 });
+                        walk(elem.children, builder);
+                        builder.addInline('!');
+                        builder.closeBlock({ trailingLineBreaks: formatOptions.trailingLineBreaks || 1 });
                     }
-                })
-                .on('end', () => {
-                    sender(message, contacts, row.campaign_name, row.config_id);
-                    console.log(contacts);
+                },
+                selectors: [
+                    // Assign it to `foo` tags.
+                    {
+                        selector: 'foo',
+                        format: 'fooBlockFormatter',
+                        options: { leadingLineBreaks: 1, trailingLineBreaks: 1 }
+                    }
+                ]
+            });
 
+            var message = converted_html;
+
+            const campaign_img = row.campaign_img == 'undefined' ? null : MessageMedia.fromFilePath('./uploads/campaign_images/' + row.campaign_img);
+
+            if (row.data_source == 'csv') {
+                fs.createReadStream('./uploads/data_leads/' + row.data_leads)
+                    .pipe(csv())
+                    .on('data', function (data) {
+                        try {
+                            contacts.push(data.number);
+                            //console.log(data.number); 
+                        } catch (err) {
+                            console.error(err);
+                            console.log('error contact number');
+                        }
+                    })
+                    .on('end', () => {
+                        sender(message, contacts, row.campaign_name, row.config_id, campaign_img);
+                        pgsql_connection.query(
+                            "update whatsapp_config set  status = 'sending' where config_id=$1",
+                            [row.config_id]);
+                        console.log(contacts);
+
+                    });
+            } else if (row.data_source == 'query') {
+                const data_leads = Buffer.from(`${row.data_leads}`, 'base64');
+                pgsql_connection.query(`${data_leads}`).then(res_query => {
+                    const data = res_query.rows;
+                    data.forEach(row_query => {
+                        //console.log(row_query.cp_number);
+                        contacts.push(row_query.cp_number);
+                    });
+
+                    sender(message, contacts, row.campaign_name, row.config_id, campaign_img);
+                    pgsql_connection.query(
+                        "update whatsapp_config set  status = 'sending' where config_id=$1",
+                        [row.config_id]);
                 });
+            }
+
 
 
         })
@@ -194,14 +262,20 @@ client.on('ready', () => {
 });
 
 
-async function sender(message, contacts, campaign_name, config_id) {
+async function sender(message, contacts, campaign_name, config_id, campaign_img) {
 
 
     for (const contact of contacts) {
         const final_number = (contact.length > 10) ? `${contact}@c.us` : `91${contact}@c.us`;
         const isRegistered = await client.isRegisteredUser(final_number);
         if (isRegistered) {
-            const msg = await client.sendMessage(final_number, media, { caption: message, type: 'DOCUMENT' });
+            if (campaign_img == null) {
+
+                const msg = await client.sendMessage(final_number, message);
+            } else {
+
+                const msg = await client.sendMessage(final_number, campaign_img, { caption: message });
+            }
             console.log(`Campaign: ${campaign_name}, Status : ${contact} Sent`);
             counter.success++;
             pgsql_connection.query(`
@@ -224,8 +298,9 @@ async function sender(message, contacts, campaign_name, config_id) {
     counter.fails = 0;
     contacts.length = 0;
     pgsql_connection.query(
-        "update whatsapp_config set triggerstatus  = 'inactive' where config_id=$1",
+        "update whatsapp_config set triggerstatus= 'inactive' , status = 'sent' where config_id=$1",
         [config_id]);
+
 }
 
 client.on('authenticated', (session) => {
@@ -277,22 +352,41 @@ function isEmptyObject(obj) {
 }
 
 const multerStorage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, './data_leads');
-    },
-    filename: (req, file, cb) => {
 
-        cb(null, `${Date.now()}_${file.originalname}`)
-        //path.extname get the uploaded file extension
+    destination: (req, file, cb) => {
+        if (file.fieldname === "data_leads") {
+            cb(null, './uploads/data_leads');
+        }
+        else if (file.fieldname === "campaign_img") {
+            cb(null, './uploads/campaign_images');
+        }
+    },
+
+    filename: (req, file, cb) => {
+        if (file.fieldname === "data_leads") {
+            cb(null, `${Date.now()}_${file.originalname}`)
+        }
+        else if (file.fieldname === "campaign_img") {
+            cb(null, `${Date.now()}_${file.originalname}`)
+        }
     }
 });
 const multerFilter = (req, file, cb) => {
-
-    if (!file.originalname.match(/\.(csv)$/)) {
-        // upload only png and jpg format
-        return cb(new Error('Please upload a CSV file only'))
+    if (file.fieldname === "data_leads") {
+        if (!file.originalname.match(/\.(csv)$/)) {
+            // upload only png and jpg format
+            return cb(new Error('Please upload a CSV file only'))
+        }
+        cb(null, true)
     }
-    cb(null, true)
+    else if (file.fieldname === "campaign_img") {
+        if (!file.originalname.match(/\.(png|jpg)$/)) {
+            // upload only png and jpg format
+            return cb(new Error('Please upload a PNG or JPG only'))
+        }
+        cb(null, true)
+    }
+
 
 };
 upload = multer({
@@ -305,7 +399,10 @@ insertConfig = async (req, res) => {
     let date_now = new Date(Date.now());
     date_now = date_now.toLocaleDateString() + " " + date_now.toLocaleTimeString();
     var campaign_msg = Buffer.from(req.body.campaign_msg).toString('base64');
-    const allquery = await pgsql_connection.query(`INSERT INTO whatsapp_config(status,triggerstatus,cron_expression,created_at,updated_at,start_at,end_at,sending,data_source,campaign_name,data_leads,campaign_msg) VALUES ('','active','${req.body.cron_expression}','${date_now}','${date_now}','${req.body.start_at}','${req.body.end_at}',true,'csv','${req.body.campaign_name}','${req.file.filename}','${campaign_msg}')`);
+    const campaign_img = isEmptyObject(req.files.campaign_img) ? 'undefined' : req.files.campaign_img[0].filename;
+    const sending = req.body.sending == 'on' ? true : false;
+    const data_leads = req.body.data_source == 'csv' ? req.files.data_leads[0].filename : Buffer.from(req.body.data_leads).toString('base64');
+    const allquery = await pgsql_connection.query(`INSERT INTO whatsapp_config(status,triggerstatus,cron_expression,created_at,updated_at,start_at,end_at,sending,data_source,campaign_name,data_leads,campaign_msg,campaign_img) VALUES ('','active','${req.body.cron_expression}','${date_now}','${date_now}','${req.body.start_at}','${req.body.end_at}',${sending},'${req.body.data_source}','${req.body.campaign_name}','${data_leads}','${campaign_msg}','${campaign_img}')`);
 
     res.status(200).json({ 'statusCode': 200, 'status': true, message: 'Config Added', 'data': [] });
 
@@ -315,8 +412,15 @@ insertConfig = async (req, res) => {
 module.exports = function (app) {
 
     //route to upload single image
-    app.post('/upload/upload-single-image', upload.single('data_leads'), insertConfig);
-
-
+    app.post('/upload/upload-config', upload.fields([
+        {
+            name: "data_leads",
+            maxCount: 1,
+        },
+        {
+            name: "campaign_img",
+            maxCount: 1,
+        }
+    ]), insertConfig);
 
 };
