@@ -51,7 +51,7 @@ pgsql_connection.on("notification", function (data) {
 
     function resend_query(dataload) {
         setTimeout(() => {
-            pgsql_connection.query(`SELECT * FROM whatsapp_config where triggerstatus='active' and sending ='true'`).then(res => {
+            pgsql_connection.query(`SELECT * FROM whatsapp_config where triggerstatus='active' and sending ='true' and status !='sending'`).then(res => {
                 const data = res.rows;
                 console.log('Whatsapp queue count : ', res.rowCount);
 
@@ -110,7 +110,7 @@ pgsql_connection.on("notification", function (data) {
                                 })
                                 .on('end', () => {
                                     sender(message, contacts, row.campaign_name, row.config_id, campaign_img);
-                                    console.log(contacts);
+                                    //console.log(contacts);
                                     pgsql_connection.query(
                                         "update whatsapp_config set  status = 'sending' where config_id=$1",
                                         [row.config_id]);
@@ -176,7 +176,7 @@ client.on('ready', () => {
         console.log('Sending..');
         deploy_all();
     }*/
-    pgsql_connection.query(`SELECT * FROM whatsapp_config where triggerstatus='active' and sending ='true'`).then(res => {
+    pgsql_connection.query(`SELECT * FROM whatsapp_config where triggerstatus='active' and sending ='true' and status !='sending'`).then(res => {
         const data = res.rows;
         //console.log(data);
         console.log('Whatsapp queue count : ', res.rowCount);
@@ -229,7 +229,7 @@ client.on('ready', () => {
                         pgsql_connection.query(
                             "update whatsapp_config set  status = 'sending' where config_id=$1",
                             [row.config_id]);
-                        console.log(contacts);
+                        //console.log(contacts);
 
                     });
             } else if (row.data_source == 'query') {
@@ -402,7 +402,7 @@ insertConfig = async (req, res) => {
     const campaign_img = isEmptyObject(req.files.campaign_img) ? 'undefined' : req.files.campaign_img[0].filename;
     const sending = req.body.sending == 'on' ? true : false;
     const data_leads = req.body.data_source == 'csv' ? req.files.data_leads[0].filename : Buffer.from(req.body.data_leads).toString('base64');
-    const allquery = await pgsql_connection.query(`INSERT INTO whatsapp_config(status,triggerstatus,cron_expression,created_at,updated_at,start_at,end_at,sending,data_source,campaign_name,data_leads,campaign_msg,campaign_img) VALUES ('','active','${req.body.cron_expression}','${date_now}','${date_now}','${req.body.start_at}','${req.body.end_at}',${sending},'${req.body.data_source}','${req.body.campaign_name}','${data_leads}','${campaign_msg}','${campaign_img}')`);
+    const allquery = await pgsql_connection.query(`INSERT INTO whatsapp_config(status,triggerstatus,cron_expression,created_at,updated_at,start_at,end_at,sending,data_source,campaign_name,data_leads,campaign_msg,campaign_img) VALUES ('pending','active','${req.body.cron_expression}','${date_now}','${date_now}','${req.body.start_at}','${req.body.end_at}',${sending},'${req.body.data_source}','${req.body.campaign_name}','${data_leads}','${campaign_msg}','${campaign_img}')`);
 
     res.status(200).json({ 'statusCode': 200, 'status': true, message: 'Config Added', 'data': [] });
 
