@@ -96,43 +96,42 @@ pgsql_connection.on("notification", function (data) {
                         const campaign_img = row.campaign_img == 'undefined' ? null : MessageMedia.fromFilePath('./uploads/campaign_images/' + row.campaign_img);
                         const date = row.start_at;
                         if (row.data_source == 'csv') {
-                            const job = schedule.scheduleJob(date, function () {
-                                fs.createReadStream('./uploads/data_leads/' + row.data_leads)
-                                    .pipe(csv())
-                                    .on('data', function (data) {
-                                        try {
-                                            contacts.push(data.number);
-                                            //console.log(data.number); 
-                                        } catch (err) {
-                                            console.error(err);
-                                            console.log('error contact number');
-                                        }
-                                    })
-                                    .on('end', () => {
-                                        sender(message, contacts, row.campaign_name, row.config_id, campaign_img);
-                                        //console.log(contacts);
-                                        pgsql_connection.query(
-                                            "update whatsapp_config set  status = 'sending' where config_id=$1",
-                                            [row.config_id]);
-                                    });
-                            });
-                        }
-                        else if (row.data_source == 'query') {
-                            const job = schedule.scheduleJob(date, function () {
-                                const data_leads = Buffer.from(`${row.data_leads}`, 'base64');
-                                pgsql_connection.query(`${data_leads}`).then(res_query => {
-                                    const data = res_query.rows;
-                                    data.forEach(row_query => {
-                                        //console.log(row_query.cp_number);
-                                        contacts.push(row_query.cp_number);
-                                    });
 
-                                    sender(message, contacts, row.campaign_name, row.config_id, campaign_img);
+                            fs.createReadStream('./uploads/data_leads/' + row.data_leads)
+                                .pipe(csv())
+                                .on('data', function (data) {
+                                    try {
+                                        contacts.push(data.number);
+                                        //console.log(data.number); 
+                                    } catch (err) {
+                                        console.error(err);
+                                        console.log('error contact number');
+                                    }
+                                })
+                                .on('end', () => {
+                                    sender(message, contacts, row.campaign_name, row.config_id, campaign_img, date);
+                                    //console.log(contacts);
                                     pgsql_connection.query(
                                         "update whatsapp_config set  status = 'sending' where config_id=$1",
                                         [row.config_id]);
                                 });
+
+                        }
+                        else if (row.data_source == 'query') {
+                            const data_leads = Buffer.from(`${row.data_leads}`, 'base64');
+                            pgsql_connection.query(`${data_leads}`).then(res_query => {
+                                const data = res_query.rows;
+                                data.forEach(row_query => {
+                                    //console.log(row_query.cp_number);
+                                    contacts.push(row_query.cp_number);
+                                });
+
+                                sender(message, contacts, row.campaign_name, row.config_id, campaign_img, date);
+                                pgsql_connection.query(
+                                    "update whatsapp_config set  status = 'sending' where config_id=$1",
+                                    [row.config_id]);
                             });
+
                         }
                     })
                 }
@@ -214,43 +213,41 @@ client.on('ready', () => {
             const campaign_img = row.campaign_img == 'undefined' ? null : MessageMedia.fromFilePath('./uploads/campaign_images/' + row.campaign_img);
             const date = row.start_at;
             if (row.data_source == 'csv') {
-                const job = schedule.scheduleJob(date, function () {
-                    fs.createReadStream('./uploads/data_leads/' + row.data_leads)
-                        .pipe(csv())
-                        .on('data', function (data) {
-                            try {
-                                contacts.push(data.number);
-                                //console.log(data.number); 
-                            } catch (err) {
-                                console.error(err);
-                                console.log('error contact number');
-                            }
-                        })
-                        .on('end', () => {
-                            sender(message, contacts, row.campaign_name, row.config_id, campaign_img);
-                            pgsql_connection.query(
-                                "update whatsapp_config set  status = 'sending' where config_id=$1",
-                                [row.config_id]);
-                            //console.log(contacts);
-
-                        });
-                });
-            } else if (row.data_source == 'query') {
-                const job = schedule.scheduleJob(date, function () {
-                    const data_leads = Buffer.from(`${row.data_leads}`, 'base64');
-                    pgsql_connection.query(`${data_leads}`).then(res_query => {
-                        const data = res_query.rows;
-                        data.forEach(row_query => {
-                            //console.log(row_query.cp_number);
-                            contacts.push(row_query.cp_number);
-                        });
-
-                        sender(message, contacts, row.campaign_name, row.config_id, campaign_img);
+                fs.createReadStream('./uploads/data_leads/' + row.data_leads)
+                    .pipe(csv())
+                    .on('data', function (data) {
+                        try {
+                            contacts.push(data.number);
+                            //console.log(data.number); 
+                        } catch (err) {
+                            console.error(err);
+                            console.log('error contact number');
+                        }
+                    })
+                    .on('end', () => {
+                        sender(message, contacts, row.campaign_name, row.config_id, campaign_img, date);
                         pgsql_connection.query(
                             "update whatsapp_config set  status = 'sending' where config_id=$1",
                             [row.config_id]);
+                        //console.log(contacts);
+
                     });
+
+            } else if (row.data_source == 'query') {
+                const data_leads = Buffer.from(`${row.data_leads}`, 'base64');
+                pgsql_connection.query(`${data_leads}`).then(res_query => {
+                    const data = res_query.rows;
+                    data.forEach(row_query => {
+                        //console.log(row_query.cp_number);
+                        contacts.push(row_query.cp_number);
+                    });
+
+                    sender(message, contacts, row.campaign_name, row.config_id, campaign_img, date);
+                    pgsql_connection.query(
+                        "update whatsapp_config set  status = 'sending' where config_id=$1",
+                        [row.config_id]);
                 });
+
             }
 
 
@@ -266,46 +263,91 @@ client.on('ready', () => {
 
 });
 
-
-async function sender(message, contacts, campaign_name, config_id, campaign_img) {
-
-
-    for (const contact of contacts) {
-        const final_number = (contact.length > 10) ? `${contact}@c.us` : `91${contact}@c.us`;
-        const isRegistered = await client.isRegisteredUser(final_number);
-        if (isRegistered) {
-            if (campaign_img == null) {
-
-                const msg = await client.sendMessage(final_number, message);
-            } else {
-
-                const msg = await client.sendMessage(final_number, campaign_img, { caption: message });
-            }
-            console.log(`Campaign: ${campaign_name}, Status : ${contact} Sent`);
-            counter.success++;
-            pgsql_connection.query(`
-            insert into whatsapp_history (config_id,campaign_name,cp_number,status,created_at,updated_at)
-            values ('${config_id}','${campaign_name}','${contact}','sent','2022-11-03 00:00:00.000','2022-11-03 00:00:00.000')
-            `);
-
-        } else {
-            console.log(`Campaign: ${campaign_name}, Status : ${contact} Failed`);
-            counter.fails++;
-            pgsql_connection.query(`
-            insert into whatsapp_history (config_id,campaign_name,cp_number,status,created_at,updated_at)
-            values ('${config_id}','${campaign_name}','${contact}','failed','2022-11-03 00:00:00.000','2022-11-03 00:00:00.000')
-            `);
-        }
-
+client.on('message', async msg => {
+    //console.log('MESSAGE RECEIVED', msg);
+    if (msg.body !== '') {
+        client.sendMessage(msg.from, `This is automated message please don't reply`);
     }
-    console.log(`Campaign: ${campaign_name}, Result: ${counter.success} sent, ${counter.fails} failed`);
-    counter.success = 0;
-    counter.fails = 0;
-    contacts.length = 0;
-    pgsql_connection.query(
-        "update whatsapp_config set triggerstatus= 'inactive' , status = 'sent' where config_id=$1",
-        [config_id]);
+});
 
+async function sender(message, contacts, campaign_name, config_id, campaign_img, date) {
+
+
+    const job = schedule.scheduleJob(date, async function () {
+        for (const contact of contacts) {
+            const final_number = (contact.length > 10) ? `${contact}@c.us` : `91${contact}@c.us`;
+            const isRegistered = await client.isRegisteredUser(final_number);
+            if (isRegistered) {
+                if (campaign_img == null) {
+                    pgsql_connection.query(`select * FROM whatsapp_history where cp_number ='${contact}' and config_id = '${config_id}'`).then(async res => {
+                        if (res.rowCount > 0) {
+
+                            //console.log('duplicate');
+                            counter.fails++;
+                        } else {
+
+                            console.log(`Campaign: ${campaign_name}, Status : ${contact} Sent`);
+                            counter.success++;
+                            pgsql_connection.query(`
+                        insert into whatsapp_history (config_id,campaign_name,cp_number,status,created_at,updated_at)
+                        values ('${config_id}','${campaign_name}','${contact}','sent','2022-11-03 00:00:00.000','2022-11-03 00:00:00.000')
+                        `);
+                            //console.log('sent');
+                            const msg = await client.sendMessage(final_number, message);
+                        }
+
+                    })
+
+                } else {
+                    pgsql_connection.query(`select * FROM whatsapp_history where cp_number ='${contact}' and config_id = '${config_id}'`).then(async res => {
+                        if (res.rowCount > 0) {
+
+                            //console.log('duplicate');
+                            counter.fails++;
+                        } else {
+
+                            console.log(`Campaign: ${campaign_name}, Status : ${contact} Sent`);
+                            counter.success++;
+                            pgsql_connection.query(`
+                        insert into whatsapp_history (config_id,campaign_name,cp_number,status,created_at,updated_at)
+                        values ('${config_id}','${campaign_name}','${contact}','sent','2022-11-03 00:00:00.000','2022-11-03 00:00:00.000')
+                        `);
+                            //console.log('sent');
+                            const msg = await client.sendMessage(final_number, campaign_img, { caption: message });
+                        }
+
+                    })
+                }
+
+            } else {
+                pgsql_connection.query(`select * FROM whatsapp_history where cp_number ='${contact}' and config_id = '${config_id}'`).then(res => {
+                    if (res.rowCount > 0) {
+
+                        //console.log('duplicate');
+                        counter.fails++;
+                    } else {
+
+                        console.log(`Campaign: ${campaign_name}, Status : ${contact} Failed`);
+                        counter.fails++;
+                        pgsql_connection.query(`
+                insert into whatsapp_history (config_id,campaign_name,cp_number,status,created_at,updated_at)
+                values ('${config_id}','${campaign_name}','${contact}','failed','2022-11-03 00:00:00.000','2022-11-03 00:00:00.000')
+                `);
+                    }
+
+                })
+
+            }
+
+        }
+        console.log(`Campaign: ${campaign_name}, Result: ${counter.success} sent, ${counter.fails} failed`);
+        counter.success = 0;
+        counter.fails = 0;
+        contacts.length = 0;
+        pgsql_connection.query(
+            "update whatsapp_config set triggerstatus= 'inactive' , status = 'sent' where config_id=$1",
+            [config_id]);
+    });
 }
 
 client.on('authenticated', (session) => {
