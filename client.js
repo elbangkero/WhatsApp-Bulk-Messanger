@@ -33,8 +33,10 @@ const client = new Client({
 client.initialize();
 
 
-let counter = { fails: 0, success: 0 }
+let counter_instant = { fails: 0, success: 0 };
+let counter_schedule = { fails: 0, success: 0 };
 
+var interval = 3000;
 /* DB QUERIES */
 
 
@@ -111,9 +113,9 @@ pgsql_connection.on("notification", function (data) {
                                 .on('end', () => {
                                     if (row.instant_trigger == 'true') {
 
-                                        sender(message, contacts, row.campaign_name, row.config_id, campaign_img, date);
+                                        InstantTrigger(message, contacts, row.campaign_name, row.config_id, campaign_img, date);
                                     } else {
-                                        console.log('Schedule trigger under maitenance');
+                                        ScheduleTrigger(message, contacts, row.campaign_name, row.config_id, campaign_img, date);
                                     }
                                     //console.log(contacts);
                                     pgsql_connection.query(
@@ -132,9 +134,9 @@ pgsql_connection.on("notification", function (data) {
                                 });
                                 if (row.instant_trigger == 'true') {
 
-                                    sender(message, contacts, row.campaign_name, row.config_id, campaign_img, date);
+                                    InstantTrigger(message, contacts, row.campaign_name, row.config_id, campaign_img, date);
                                 } else {
-                                    console.log('Schedule trigger under maitenance');
+                                    ScheduleTrigger(message, contacts, row.campaign_name, row.config_id, campaign_img, date);
                                 }
                                 pgsql_connection.query(
                                     "update whatsapp_config set  status = 'sending' where config_id=$1",
@@ -155,9 +157,12 @@ pgsql_connection.on("notification", function (data) {
 
 
     //ready();
-    counter.success = 0;
-    counter.fails = 0;
-
+    //counter.success = 0;
+    //counter.fails = 0;
+    counter_instant.success = 0;
+    counter_instant.fails = 0;
+    counter_schedule.success = 0;
+    counter_schedule.fails = 0;
 
 
 
@@ -236,9 +241,9 @@ client.on('ready', () => {
                     .on('end', () => {
                         if (row.instant_trigger == 'true') {
 
-                            sender(message, contacts, row.campaign_name, row.config_id, campaign_img, date);
+                            InstantTrigger(message, contacts, row.campaign_name, row.config_id, campaign_img, date);
                         } else {
-                            console.log('Schedule trigger under maitenance');
+                            ScheduleTrigger(message, contacts, row.campaign_name, row.config_id, campaign_img, date);
                         }
                         pgsql_connection.query(
                             "update whatsapp_config set  status = 'sending' where config_id=$1",
@@ -258,9 +263,9 @@ client.on('ready', () => {
 
                     if (row.instant_trigger == 'true') {
 
-                        sender(message, contacts, row.campaign_name, row.config_id, campaign_img, date);
+                        InstantTrigger(message, contacts, row.campaign_name, row.config_id, campaign_img, date);
                     } else {
-                        console.log('Schedule trigger under maitenance');
+                        ScheduleTrigger(message, contacts, row.campaign_name, row.config_id, campaign_img, date);
                     }
                     pgsql_connection.query(
                         "update whatsapp_config set  status = 'sending' where config_id=$1",
@@ -286,15 +291,120 @@ client.on('message', async msg => {
     }
 });
 
-async function sender(message, contacts, campaign_name, config_id, campaign_img, date) {
+//schedule trigger
+async function ScheduleTrigger(message, contacts, campaign_name, config_id, campaign_img, date) {
+
+
+    let total_schedule = 0;
+    const job = schedule.scheduleJob(date, async function () {
+        contacts.forEach(function (el, index) {
+            total_schedule++
+            setTimeout(async function () {
+                const final_number = (el.length > 10) ? `${el}@c.us` : `91${el}@c.us`;
+                const isRegistered = await client.isRegisteredUser(final_number);
+                if (isRegistered) {
+                    if (campaign_img == null) {
+                        pgsql_connection.query(`select * FROM whatsapp_history where cp_number ='${el}' and config_id = '${config_id}'`).then(async res => {
+                            if (res.rowCount > 0) {
+
+                                //console.log('duplicate');
+                                //counter.fails++;  
+                                counter_schedule.fails++;
+                            } else {
+
+                                console.log(`Campaign: ${campaign_name}, Status : ${el} Sent`);
+                                //counter.success++;
+                                counter_schedule.success++;
+                                pgsql_connection.query(`
+                        insert into whatsapp_history (config_id,campaign_name,cp_number,status,created_at,updated_at)
+                        values ('${config_id}','${campaign_name}','${el}','sent','2022-11-03 00:00:00.000','2022-11-03 00:00:00.000')
+                        `);
+                                //console.log('sent');
+                                const msg = await client.sendMessage(final_number, message);
+                            }
+
+                        })
+
+                    } else {
+                        pgsql_connection.query(`select * FROM whatsapp_history where cp_number ='${el}' and config_id = '${config_id}'`).then(async res => {
+                            if (res.rowCount > 0) {
+
+                                //console.log('duplicate');
+                                //counter.fails++;
+                                counter_schedule.fails++;
+                            } else {
+
+                                console.log(`Campaign: ${campaign_name}, Status : ${el} Sent`);
+                                //counter.success++;
+                                counter_schedule.success++;
+                                pgsql_connection.query(`
+                        insert into whatsapp_history (config_id,campaign_name,cp_number,status,created_at,updated_at)
+                        values ('${config_id}','${campaign_name}','${el}','sent','2022-11-03 00:00:00.000','2022-11-03 00:00:00.000')
+                        `);
+                                //console.log('sent');
+                                const msg = await client.sendMessage(final_number, campaign_img, { caption: message });
+                            }
+
+                        })
+                    }
+
+                } else {
+                    pgsql_connection.query(`select * FROM whatsapp_history where cp_number ='${el}' and config_id = '${config_id}'`).then(res => {
+                        if (res.rowCount > 0) {
+
+                            //console.log('duplicate');
+                            //counter.fails++;
+                            counter_schedule.fails++;
+                        } else {
+
+                            console.log(`Campaign: ${campaign_name}, Status : ${el} Failed`);
+                            //counter.fails++;
+                            counter_schedule.fails++;
+                            pgsql_connection.query(`
+                insert into whatsapp_history (config_id,campaign_name,cp_number,status,created_at,updated_at)
+                values ('${config_id}','${campaign_name}','${el}','failed','2022-11-03 00:00:00.000','2022-11-03 00:00:00.000')
+                `);
+                        }
+
+                    })
+
+                }
+
+
+
+            }, index * interval);
+
+
+        });
+        //console.log(total);
+        setTimeout(async function () {
+
+            console.log(`Campaign: ${campaign_name}, Result: ${counter_schedule.success} sent, ${counter_schedule.fails} failed`);
+            counter_schedule.success = 0;
+            counter_schedule.fails = 0;
+            contacts.length = 0;
+            pgsql_connection.query(
+                "update whatsapp_config set triggerstatus= 'inactive' , status = 'sent' where config_id=$1",
+                [config_id]);
+
+        }, total_schedule * interval);
+
+    });
+
+
+}
+//instant trigger
+async function InstantTrigger(message, contacts, campaign_name, config_id, campaign_img, date) {
 
     /*
         const job = schedule.scheduleJob(date, async function () {
           //transfer code here for schedule trigger
         });
     */
-    var interval = 3000; // how much time should the delay between two iterations be (in milliseconds)?
+
+    let total_instant = 0;
     contacts.forEach(function (el, index) {
+        total_instant++
         setTimeout(async function () {
             const final_number = (el.length > 10) ? `${el}@c.us` : `91${el}@c.us`;
             const isRegistered = await client.isRegisteredUser(final_number);
@@ -304,15 +414,17 @@ async function sender(message, contacts, campaign_name, config_id, campaign_img,
                         if (res.rowCount > 0) {
 
                             //console.log('duplicate');
-                            counter.fails++;
+                            //counter.fails++;
+                            counter_instant.fails++;
                         } else {
 
                             console.log(`Campaign: ${campaign_name}, Status : ${el} Sent`);
-                            counter.success++;
+                            //counter.success++;
+                            counter_instant.success;
                             pgsql_connection.query(`
-                        insert into whatsapp_history (config_id,campaign_name,cp_number,status,created_at,updated_at)
-                        values ('${config_id}','${campaign_name}','${el}','sent','2022-11-03 00:00:00.000','2022-11-03 00:00:00.000')
-                        `);
+                            insert into whatsapp_history (config_id,campaign_name,cp_number,status,created_at,updated_at)
+                            values ('${config_id}','${campaign_name}','${el}','sent','2022-11-03 00:00:00.000','2022-11-03 00:00:00.000')
+                            `);
                             //console.log('sent');
                             const msg = await client.sendMessage(final_number, message);
                         }
@@ -324,15 +436,17 @@ async function sender(message, contacts, campaign_name, config_id, campaign_img,
                         if (res.rowCount > 0) {
 
                             //console.log('duplicate');
-                            counter.fails++;
+                            //counter.fails++;
+                            counter_instant.fails++;
                         } else {
 
                             console.log(`Campaign: ${campaign_name}, Status : ${el} Sent`);
-                            counter.success++;
+                            //counter.success++;
+                            counter_instant.success++;
                             pgsql_connection.query(`
-                        insert into whatsapp_history (config_id,campaign_name,cp_number,status,created_at,updated_at)
-                        values ('${config_id}','${campaign_name}','${el}','sent','2022-11-03 00:00:00.000','2022-11-03 00:00:00.000')
-                        `);
+                            insert into whatsapp_history (config_id,campaign_name,cp_number,status,created_at,updated_at)
+                            values ('${config_id}','${campaign_name}','${el}','sent','2022-11-03 00:00:00.000','2022-11-03 00:00:00.000')
+                            `);
                             //console.log('sent');
                             const msg = await client.sendMessage(final_number, campaign_img, { caption: message });
                         }
@@ -345,15 +459,17 @@ async function sender(message, contacts, campaign_name, config_id, campaign_img,
                     if (res.rowCount > 0) {
 
                         //console.log('duplicate');
-                        counter.fails++;
+                        //counter.fails++;
+                        counter_instant.fails++;
                     } else {
 
                         console.log(`Campaign: ${campaign_name}, Status : ${el} Failed`);
-                        counter.fails++;
+                        //counter.fails++;
+                        counter_instant.fails++;
                         pgsql_connection.query(`
-                insert into whatsapp_history (config_id,campaign_name,cp_number,status,created_at,updated_at)
-                values ('${config_id}','${campaign_name}','${el}','failed','2022-11-03 00:00:00.000','2022-11-03 00:00:00.000')
-                `);
+                    insert into whatsapp_history (config_id,campaign_name,cp_number,status,created_at,updated_at)
+                    values ('${config_id}','${campaign_name}','${el}','failed','2022-11-03 00:00:00.000','2022-11-03 00:00:00.000')
+                    `);
                     }
 
                 })
@@ -363,15 +479,20 @@ async function sender(message, contacts, campaign_name, config_id, campaign_img,
     });
 
 
-    console.log(`Campaign: ${campaign_name}, Result: ${counter.success} sent, ${counter.fails} failed`);
-    counter.success = 0;
-    counter.fails = 0;
-    contacts.length = 0;
-    pgsql_connection.query(
-        "update whatsapp_config set triggerstatus= 'inactive' , status = 'sent' where config_id=$1",
-        [config_id]);
-}
+    setTimeout(async function () {
 
+        console.log(`Campaign: ${campaign_name}, Result: ${counter_instant.success} sent, ${counter_instant.fails} failed`);
+        counter_instant.success = 0;
+        counter_instant.fails = 0;
+        contacts.length = 0;
+        pgsql_connection.query(
+            "update whatsapp_config set triggerstatus= 'inactive' , status = 'sent' where config_id=$1",
+            [config_id]);
+
+    }, total_instant * interval);
+
+
+}
 client.on('authenticated', (session) => {
     console.log("Authentication : Succesfully")
 });
