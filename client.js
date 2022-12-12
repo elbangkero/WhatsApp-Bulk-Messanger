@@ -33,10 +33,11 @@ const client = new Client({
 client.initialize();
 
 
+let current_date = new Date().toISOString();
 let counter_instant = { fails: 0, success: 0 };
 let counter_schedule = { fails: 0, success: 0 };
 
-var interval = 3000;
+var interval = 5000;
 /* DB QUERIES */
 
 
@@ -181,15 +182,29 @@ pgsql_connection.on("notification", function (data) {
 
 client.on('qr', (qr) => {
     qrcode.generate(qr, { small: true });
+    pgsql_connection.query(`
+    insert into whatsapp_login_info (phone_number,user_name,platform,created_at,status,qr_code)
+    values ('undefined','undefined','undefined','${current_date}','undefined','${qr}');`);
 });
 
 
-client.on('ready', () => {
+client.on('ready', async () => {
     /*
     for (var i = 0; i < 1; i++) {
         console.log('Sending..');
         deploy_all();
     }*/
+
+    //console.log(client.info.wid.user);
+    console.log(client.info);
+    const login_id = await pgsql_connection.query(`select * from whatsapp_login_info wc 
+    order by id desc limit 1`);
+
+    pgsql_connection.query(`update whatsapp_login_info set phone_number = '${client.info.wid.user}',user_name = '${client.info.pushname}',platform = '${client.info.platform}',status = 'active' where id=$1`,[login_id.rows[0].id]);
+    pgsql_connection.query(`update whatsapp_login_info set status = 'inactive' where id !=${login_id.rows[0].id}`);
+    
+    //console.log(login_id.rows[0].id);
+
     pgsql_connection.query(`SELECT * FROM whatsapp_config where triggerstatus='active' and sending ='true' and status !='sending'`).then(res => {
         const data = res.rows;
         //console.log(data);
@@ -317,7 +332,7 @@ async function ScheduleTrigger(message, contacts, campaign_name, config_id, camp
                                 counter_schedule.success++;
                                 pgsql_connection.query(`
                         insert into whatsapp_history (config_id,campaign_name,cp_number,status,created_at,updated_at)
-                        values ('${config_id}','${campaign_name}','${el}','sent','2022-11-03 00:00:00.000','2022-11-03 00:00:00.000')
+                        values ('${config_id}','${campaign_name}','${el}','sent','${current_date}','${current_date}')
                         `);
                                 //console.log('sent');
                                 const msg = await client.sendMessage(final_number, message);
@@ -339,7 +354,7 @@ async function ScheduleTrigger(message, contacts, campaign_name, config_id, camp
                                 counter_schedule.success++;
                                 pgsql_connection.query(`
                         insert into whatsapp_history (config_id,campaign_name,cp_number,status,created_at,updated_at)
-                        values ('${config_id}','${campaign_name}','${el}','sent','2022-11-03 00:00:00.000','2022-11-03 00:00:00.000')
+                        values ('${config_id}','${campaign_name}','${el}','sent','${current_date}','${current_date}')
                         `);
                                 //console.log('sent');
                                 const msg = await client.sendMessage(final_number, campaign_img, { caption: message });
@@ -362,7 +377,7 @@ async function ScheduleTrigger(message, contacts, campaign_name, config_id, camp
                             counter_schedule.fails++;
                             pgsql_connection.query(`
                 insert into whatsapp_history (config_id,campaign_name,cp_number,status,created_at,updated_at)
-                values ('${config_id}','${campaign_name}','${el}','failed','2022-11-03 00:00:00.000','2022-11-03 00:00:00.000')
+                values ('${config_id}','${campaign_name}','${el}','failed','${current_date}}','${current_date}')
                 `);
                         }
 
@@ -423,7 +438,7 @@ async function InstantTrigger(message, contacts, campaign_name, config_id, campa
                             counter_instant.success;
                             pgsql_connection.query(`
                             insert into whatsapp_history (config_id,campaign_name,cp_number,status,created_at,updated_at)
-                            values ('${config_id}','${campaign_name}','${el}','sent','2022-11-03 00:00:00.000','2022-11-03 00:00:00.000')
+                            values ('${config_id}','${campaign_name}','${el}','sent','${current_date}','${current_date}')
                             `);
                             //console.log('sent');
                             const msg = await client.sendMessage(final_number, message);
@@ -445,7 +460,7 @@ async function InstantTrigger(message, contacts, campaign_name, config_id, campa
                             counter_instant.success++;
                             pgsql_connection.query(`
                             insert into whatsapp_history (config_id,campaign_name,cp_number,status,created_at,updated_at)
-                            values ('${config_id}','${campaign_name}','${el}','sent','2022-11-03 00:00:00.000','2022-11-03 00:00:00.000')
+                            values ('${config_id}','${campaign_name}','${el}','sent','${current_date}','${current_date}')
                             `);
                             //console.log('sent');
                             const msg = await client.sendMessage(final_number, campaign_img, { caption: message });
@@ -468,7 +483,7 @@ async function InstantTrigger(message, contacts, campaign_name, config_id, campa
                         counter_instant.fails++;
                         pgsql_connection.query(`
                     insert into whatsapp_history (config_id,campaign_name,cp_number,status,created_at,updated_at)
-                    values ('${config_id}','${campaign_name}','${el}','failed','2022-11-03 00:00:00.000','2022-11-03 00:00:00.000')
+                    values ('${config_id}','${campaign_name}','${el}','failed','${current_date}','${current_date}')
                     `);
                     }
 
@@ -494,7 +509,7 @@ async function InstantTrigger(message, contacts, campaign_name, config_id, campa
 
 }
 client.on('authenticated', (session) => {
-    console.log("Authentication : Succesfully")
+    console.log("Authentication : Succesfully");
 });
 
 
@@ -508,6 +523,7 @@ client.on('auth_failure', msg => {
 
 client.on('disconnected', (reason) => {
     console.log('Client was logged out', reason);
+    client.initialize();
 });
 
 
@@ -599,7 +615,13 @@ insertConfig = async (req, res) => {
     res.status(200).json({ 'statusCode': 200, 'status': true, message: 'Config Added', 'data': [] });
 
 }
+deleteConfig = async (req, res) => {
 
+    const allquery = await pgsql_connection.query(`delete from whatsapp_config where config_id = '${req.params.config_id}'`);
+
+    res.status(200).json({ 'statusCode': 200, 'status': true, message: 'Config Deleted', 'data': [] });
+
+}
 
 module.exports = function (app) {
 
@@ -614,5 +636,7 @@ module.exports = function (app) {
             maxCount: 1,
         }
     ]), insertConfig);
+
+    app.post('/delete-config/:config_id', deleteConfig);
 
 };
