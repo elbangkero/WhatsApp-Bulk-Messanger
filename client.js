@@ -12,7 +12,7 @@ const { htmlToText } = require('html-to-text');
 const schedule = require('node-schedule');
 const pgsql_connection = new Pgsql
     ({
-        user: `${process.env.USER}`,
+        user: `${process.env.USER_DB}`,
         host: `${process.env.HOST}`,
         database: `${process.env.DATABASE}`,
         password: `${process.env.PASSWORD}`,
@@ -27,7 +27,18 @@ const client = new Client({
     authStrategy: new LocalAuth({
         clientId: "client-one",
         dataPath: "./Session"
-    })
+    }),
+    puppeteer: [
+        "--no-default-browser-check",
+        "--disable-session-crashed-bubble",
+        '--disable-dev-shm-usage',
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+    ],
+    takeoverOnConflict: true,
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
 })
 
 client.initialize();
@@ -37,7 +48,7 @@ let current_date = new Date().toISOString();
 let counter_instant = { fails: 0, success: 0 };
 let counter_schedule = { fails: 0, success: 0 };
 
-var interval = 0;
+var interval = 500;
 /* DB QUERIES */
 
 
@@ -404,83 +415,6 @@ async function ScheduleTrigger(message, contacts, campaign_name, config_id, camp
 
 
 }
-//Trigger without verifying account can use on production
-async function withoutVerify(message, contacts, campaign_name, config_id, campaign_img, date) {
-
-    /*
-        const job = schedule.scheduleJob(date, async function () {
-          //transfer code here for schedule trigger
-        });
-    */
-
-    let total_instant = 0;
-    contacts.forEach(function (el, index) {
-        total_instant++
-        setTimeout(async function () {
-            const final_number = (el.length > 10) ? `${el}@c.us` : `91${el}@c.us`;
-            const isRegistered = await client.isRegisteredUser(final_number);
-            if (campaign_img == null) {
-                pgsql_connection.query(`select * FROM whatsapp_history where cp_number ='${el}' and config_id = '${config_id}'`).then(async res => {
-                    if (res.rowCount > 0) {
-
-                        //console.log('duplicate');
-                        //counter.fails++;
-                        counter_instant.fails++;
-                    } else {
-
-                        console.log(`Campaign: ${campaign_name}, Status : ${el} Sent`);
-                        //counter.success++;
-                        counter_instant.success;
-                        pgsql_connection.query(`
-                                insert into whatsapp_history (config_id,campaign_name,cp_number,status,created_at,updated_at)
-                                values ('${config_id}','${campaign_name}','${el}','sent','${current_date}','${current_date}')
-                                `);
-                        //console.log('sent');
-                        //const msg = await client.sendMessage(final_number, message);
-                    }
-
-                })
-
-            } else {
-                pgsql_connection.query(`select * FROM whatsapp_history where cp_number ='${el}' and config_id = '${config_id}'`).then(async res => {
-                    if (res.rowCount > 0) {
-
-                        //console.log('duplicate');
-                        //counter.fails++;
-                        counter_instant.fails++;
-                    } else {
-
-                        console.log(`Campaign: ${campaign_name}, Status : ${el} Sent`);
-                        //counter.success++;
-                        counter_instant.success++;
-                        pgsql_connection.query(`
-                                insert into whatsapp_history (config_id,campaign_name,cp_number,status,created_at,updated_at)
-                                values ('${config_id}','${campaign_name}','${el}','sent','${current_date}','${current_date}')
-                                `);
-                        //console.log('sent');
-                        //const msg = await client.sendMessage(final_number, campaign_img, { caption: message });
-                    }
-
-                })
-            }
-        }, index * interval);
-    });
-
-
-    setTimeout(async function () {
-
-        console.log(`Campaign: ${campaign_name}, Result: ${counter_instant.success} sent, ${counter_instant.fails} failed`);
-        counter_instant.success = 0;
-        counter_instant.fails = 0;
-        contacts.length = 0;
-        pgsql_connection.query(
-            "update whatsapp_config set triggerstatus= 'inactive' , status = 'sent' where config_id=$1",
-            [config_id]);
-
-    }, total_instant * interval);
-
-
-}
 
 
 async function InstantTrigger(message, contacts, campaign_name, config_id, campaign_img, date) {
@@ -675,8 +609,8 @@ upload = multer({
 
 insertConfig = async (req, res) => {
 
-    let date_now = new Date(Date.now());
-    date_now = date_now.toLocaleDateString() + " " + date_now.toLocaleTimeString();
+
+    let date_now = new Date().toISOString();
     var campaign_msg = Buffer.from(req.body.campaign_msg).toString('base64');
     const campaign_img = isEmptyObject(req.files.campaign_img) ? 'undefined' : req.files.campaign_img[0].filename;
     const sending = req.body.sending == 'on' ? true : false;
